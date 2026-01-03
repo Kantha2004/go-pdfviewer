@@ -140,7 +140,7 @@ func TestLexer_NextToken(t *testing.T) {
 			name:  "Hex Strings",
 			input: "<4E6F762073686D6F7A206B6120706F702E>",
 			expected: []model.Token{
-				{Type: model.TokHexaString, Value: "4E6F762073686D6F7A206B6120706F702E"},
+				{Type: model.TokHexString, Value: "4E6F762073686D6F7A206B6120706F702E"},
 				{Type: model.TokEOF},
 			},
 		},
