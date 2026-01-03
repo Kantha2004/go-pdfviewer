@@ -49,7 +49,7 @@ go-pdfviewer/
 
 - [x] Project structure
 - [x] PDF lexer
-- [ ] PDF value parser
+- [x] PDF value parser
 - [ ] Indirect object parsing
 - [ ] XRef resolution
 - [ ] Page tree traversal
