@@ -48,7 +48,7 @@ go-pdfviewer/
 ## Current Status
 
 - [x] Project structure
-- [ ] PDF lexer
+- [x] PDF lexer
 - [ ] PDF value parser
 - [ ] Indirect object parsing
 - [ ] XRef resolution
