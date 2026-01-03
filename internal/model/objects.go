@@ -28,3 +28,16 @@ type PDFObject struct {
 	Gen    int
 	Value  PDFValue
 }
+
+type XRefEntry struct {
+	Offset     int
+	Generation int
+	InUse      bool
+}
+
+type XRefTable map[int]XRefEntry
+
+const (
+	ObjectInUse string = "n"
+	ObjectFree  string = "f"
+)

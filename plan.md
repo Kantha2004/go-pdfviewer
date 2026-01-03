@@ -1,369 +1,285 @@
-# PDF Parser & Renderer — Complete Roadmap
+# PDF PARSER – COMPLETE IMPLEMENTATION PLAN (END-TO-END)
 
-## Phase 0 — Foundations (Mandatory)
+This document describes the FULL conceptual and implementation roadmap for building a PDF parser from scratch (like a real PDF engine), using clean grammar layering and correct architecture.
 
-### Objectives
+This is NOT code. This is the PLAN you follow step-by-step.
 
-* Establish project structure
-* Lock architectural boundaries
-* Prevent scope creep
+## PHASE 0 — CORE PRINCIPLES (READ ONCE, NEVER FORGET)
 
-### Deliverables
+1. A PDF is NOT one grammar — it is MULTIPLE grammars stacked together.
+2. Each grammar layer must be STRICTLY isolated.
+3. Each layer consumes tokens from the SAME stream.
+4. No layer "passes data down" — layers READ from the stream.
 
-* Repository layout finalized
-* Core model types defined
-* Build pipeline working
+**Grammar layers (bottom → top):**
+1. Lexer
+2. Value Grammar
+3. Object Grammar
+4. Document Grammar
+5. Cross-Reference Grammar
 
-### Tasks
+**Violating this separation guarantees bugs.**
 
-* Define `PDFValue` model
-* Define token types
-* Create CLI entry point
-* Add minimal test PDF
+## PHASE 1 — LEXER (DONE)
 
-### Exit Criteria
+**Responsibility:**
+Convert raw bytes → token stream
 
-* Project builds
-* No rendering logic exists yet
+**Tokens include:**
+- Numbers
+- Names
+- Strings
+- Hex strings
+- Keywords
+- Array start/end
+- Dictionary start/end
+- EOF
 
----
+**Lexer rules:**
+- Skip whitespace and comments
+- Do NOT interpret meaning
+- Do NOT group tokens
 
-## Phase 1 — Lexer (Tokenizer)
+**Output:**
+Stream of tokens, nothing more.
 
-### Objectives
+**Status:**
+- [x] COMPLETED
 
-* Convert byte stream → token stream
-* Handle malformed PDFs gracefully
+## PHASE 2 — VALUE PARSER (DONE)
 
-### Tasks
+**Responsibility:**
+Parse ONE PDF VALUE from token stream.
 
-* Byte-level reader
-* Whitespace handling
-* Comment handling
-* Delimiter recognition
-* Token generation
-* Lookahead support
+**Supported values:**
+- Number (int / float)
+- Boolean (true / false)
+- Null
+- Name
+- String
+- Hex string
+- Array
+- Dictionary
+- Indirect Reference (n n R)
 
-### Deliverables
+**Critical rule:**
+Indirect references are VALUE grammar, not object grammar.
 
-* Fully tested lexer
-* Token stream debug tool
+**Stop condition:**
+The value parser MUST stop exactly at the end of ONE value.
 
-### Exit Criteria
+**Status:**
+- [x] COMPLETED
 
-* Real PDFs tokenize without crash
-* Token stream matches spec
+## PHASE 3 — OBJECT PARSER (DONE)
 
-### Common Pitfalls
+**Responsibility:**
+Parse ONE indirect object.
 
-* Line-based parsing
-* Missing delimiters
-* Incorrect comment termination
+**Grammar:**
+```
+<object-number> <generation> obj
+    <value>
+endobj
+```
 
----
+**Rules:**
+- object-number and generation MUST be integers
+- "obj" and "endobj" are STRUCTURAL keywords
+- Exactly ONE value per object
 
-## Phase 2 — Value Parser (Syntax Layer)
+**Critical rule:**
+Object parser reads the value itself; it is NOT passed in.
 
-### Objectives
+**Status:**
+- [x] COMPLETED
 
-* Convert tokens → structured values
+## PHASE 4 — OBJECT TABLE (DONE)
 
-### Tasks
+**Responsibility:**
+Store all parsed objects for later lookup.
 
-* Recursive value parsing
-* Arrays and dictionaries
-* Boolean, null handling
-* Indirect reference detection
-* Single-token lookahead buffer
+**Data structure:**
+`map[int]map[int]*PDFObject`
 
-### Deliverables
+**Meaning:**
+`objectTable[objNum][gen] → object`
 
-* `ParseValue()` implementation
-* Value tree printer
+**Rules:**
+- Duplicate objects overwrite (last wins)
+- Missing object is a normal condition
 
-### Exit Criteria
+**Status:**
+- [x] COMPLETED
 
-* Page dictionaries parse correctly
-* Indirect references resolved syntactically
+## PHASE 5 — DOCUMENT-LEVEL PARSER (CURRENT PHASE)
 
-### Common Pitfalls
+**Responsibility:**
+Control the HIGH-LEVEL parsing flow.
 
-* Losing tokens during lookahead
-* Confusing numbers with references
-* Incorrect dictionary termination
+**This layer:**
+- Repeatedly parses objects
+- Detects transition to XRef section
+- Switches grammar modes
 
----
+**This is where the parser becomes STATEFUL.**
 
-## Phase 3 — Object & XRef Parsing (Document Backbone)
+**States:**
+- ReadingObjects
+- ReadingXRef
+- ReadingTrailer
 
-### Objectives
+**Status:**
+- [ ] **IN PROGRESS**
 
-* Build object table
-* Enable random access
+## PHASE 6 — XREF PARSING (NEXT IMPLEMENTATION STEP)
 
-### Tasks
+**Responsibility:**
+Parse the Cross-Reference Table.
 
-* Parse `obj … endobj`
-* Parse classic xref table
-* Parse `startxref`
-* Build object offset map
-* Load trailer dictionary
+**Concept:**
+XRef is the AUTHORITATIVE index of object locations.
 
-### Deliverables
+**Grammar:**
+```
+xref
+<firstObj> <count>
+<offset> <generation> <n|f>
+...
+```
 
-* Object store
-* XRef table
-* Catalog reference
+**Data structure:**
+`map[int]XRefEntry`
 
-### Exit Criteria
+where:
+```go
+XRefEntry {
+    Offset     int
+    Generation int
+    InUse      bool
+}
+```
 
-* Any object can be resolved by number
-* Page tree root identified
+**Rules:**
+- Object 0 is always free
+- Offsets are byte positions
+- XRef does NOT use value grammar
 
-### Common Pitfalls
+**Do NOT:**
+- Seek to offsets yet
+- Resolve references yet
 
-* Ignoring generation numbers
-* Incorrect xref offsets
-* Not handling incremental updates
+**Status:**
+- [ ] NOT STARTED
 
----
+## PHASE 7 — TRAILER PARSING
 
-## Phase 4 — Page Tree Resolution
+**Responsibility:**
+Parse the trailer dictionary.
 
-### Objectives
+**Grammar:**
+```
+trailer
+<< /Size N /Root n n R ... >>
+```
 
-* Resolve logical pages in order
+**Trailer tells:**
+- Total object count
+- Root catalog object
+- Encryption info
+- Info dictionary
 
-### Tasks
+**Trailer is a VALUE (dictionary),**
+but is introduced by STRUCTURAL keyword "trailer".
 
-* Traverse `/Pages` tree
-* Inherit resources
-* Resolve `/MediaBox`, `/Rotate`
-* Collect `/Contents`
+**Status:**
+- [ ] NOT STARTED
 
-### Deliverables
+## PHASE 8 — STARTXREF + EOF HANDLING
 
-* Ordered page list
-* Page metadata
+**Responsibility:**
+Locate the correct xref offset.
 
-### Exit Criteria
+**Grammar:**
+```
+startxref
+<offset>
+%%EOF
+```
 
-* Correct page count
-* Correct media boxes
+**Rules:**
+- startxref is authoritative
+- Last xref wins (incremental updates)
 
-### Common Pitfalls
+**Status:**
+- [ ] NOT STARTED
 
-* Ignoring resource inheritance
-* Mishandling `/Kids`
-* Incorrect recursion depth
+## PHASE 9 — REFERENCE RESOLUTION
 
----
+**Responsibility:**
+Resolve indirect references (n n R).
 
-## Phase 5 — Stream Decoding
+**Strategy:**
+- Use object table + xref
+- Lazy resolution (on demand)
 
-### Objectives
+**Rule:**
+Never resolve references during parsing.
 
-* Extract raw content streams
+**Status:**
+- [ ] NOT STARTED
 
-### Tasks
+## PHASE 10 — ROOT CATALOG & PAGE TREE
 
-* Stream length resolution
-* `/FlateDecode` support
-* Handle multiple content streams
-* Concatenate streams
+**Responsibility:**
+Build the logical document structure.
 
-### Deliverables
+**Steps:**
+- Resolve /Root
+- Resolve /Pages
+- Traverse page tree
+- Extract page contents
 
-* Decoded content stream bytes
+**Status:**
+- [ ] NOT STARTED
 
-### Exit Criteria
+## PHASE 11 — CONTENT STREAM INTERPRETER
 
-* Content streams readable as plain text
-* No data corruption
+**Responsibility:**
+Interpret page content streams.
 
-### Common Pitfalls
+**This is a STACK-BASED language:**
+- Operands pushed
+- Operators consume operands
 
-* Incorrect stream length
-* Ignoring indirect `/Length`
-* Forgetting multiple streams
+**Examples:**
+- Text drawing
+- Graphics operators
+- Path construction
 
----
+**Status:**
+- [ ] NOT STARTED
 
-## Phase 6 — Content Stream Interpreter (Graphics Engine)
+## PHASE 12 — RENDERING (VERY LAST)
 
-### Objectives
+**Responsibility:**
+Convert PDF instructions → pixels / vectors.
 
-* Execute PDF drawing commands
+**This is OUTSIDE the parser.**
 
-### Tasks
+**Parser must already produce:**
+- Page structure
+- Content streams
+- Resources
 
-* Operand stack
-* Operator dispatch
-* Graphics state stack
-* Path construction
-* Color and line width
+**Status:**
+- [ ] NOT STARTED
 
-### Deliverables
+## FINAL RULES (PRINT THIS)
 
-* Interpreter loop
-* Operator handlers
+1. **NEVER** mix grammar layers
+2. **NEVER** parse ahead without unread support
+3. **NEVER** resolve references early
+4. **ALWAYS** trust XRef over sequential parsing
 
-### Exit Criteria
-
-* Lines and shapes render correctly
-* Graphics state push/pop works
-
-### Common Pitfalls
-
-* Incorrect operand order
-* Missing state isolation
-* Ignoring CTM
-
----
-
-## Phase 7 — Rasterizer (Rendering Core)
-
-### Objectives
-
-* Convert vector paths → pixels
-
-### Tasks
-
-* Path flattening
-* Scanline fill
-* Stroke rendering
-* Coordinate transforms
-* Anti-aliasing (optional)
-
-### Deliverables
-
-* RGBA image output
-* PNG export
-
-### Exit Criteria
-
-* Shapes render identically across runs
-
-### Common Pitfalls
-
-* Floating-point drift
-* Incorrect fill rules
-* Coordinate inversion errors
-
----
-
-## Phase 8 — Text Rendering (Hardest Phase)
-
-### Objectives
-
-* Render glyphs accurately
-
-### Tasks
-
-* Text state tracking
-* Type1 font support
-* Encoding maps
-* Glyph positioning
-* Text matrix handling
-
-### Deliverables
-
-* Rendered text
-* Text bounding boxes
-
-### Exit Criteria
-
-* Simple PDFs show readable text
-
-### Common Pitfalls
-
-* Treating text as strings
-* Ignoring glyph metrics
-* Incorrect spacing rules
-
----
-
-## Phase 9 — Image Rendering
-
-### Objectives
-
-* Render embedded images
-
-### Tasks
-
-* Image XObject parsing
-* Color space handling
-* Pixel unpacking
-* CTM application
-
-### Deliverables
-
-* Bitmap images rendered in page
-
-### Exit Criteria
-
-* Images align correctly with text
-
-### Common Pitfalls
-
-* Wrong color space
-* Incorrect scaling
-* Ignoring masks
-
----
-
-## Phase 10 — Viewer Integration
-
-### Objectives
-
-* Make it usable
-
-### Tasks
-
-* Page navigation
-* Zoom and pan
-* Page caching
-* DPI scaling
-
-### Deliverables
-
-* CLI or GUI viewer
-
-### Exit Criteria
-
-* Interactive viewing works smoothly
-
----
-
-## Phase 11 — Robustness & Compliance
-
-### Objectives
-
-* Handle real-world PDFs
-
-### Tasks
-
-* Error recovery
-* Broken PDF tolerance
-* Incremental updates
-* Performance tuning
-
-### Deliverables
-
-* Stable engine
-
-### Exit Criteria
-
-* Common PDFs render without crash
-
----
-
-## Phase 12 — Advanced Features (Optional)
-
-* Annotations
-* Forms
-* Transparency
-* ICC color profiles
-* Encryption
-
----
+If you follow this plan in order, you will end up with a REAL PDF engine.
