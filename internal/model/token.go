@@ -43,6 +43,8 @@ const (
 const (
 	ObjectStart string = "obj"
 	ObjectEnd   string = "endobj"
+	XRef        string = "xref"
+	Trailer     string = "trailer"
 )
 
 // Token represents a single lexical token produced by the lexer.
