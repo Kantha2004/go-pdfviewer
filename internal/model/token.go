@@ -40,6 +40,11 @@ const (
 	Decimal byte = '.'
 )
 
+const (
+	ObjectStart string = "obj"
+	ObjectEnd   string = "endobj"
+)
+
 // Token represents a single lexical token produced by the lexer.
 type Token struct {
 	Type  TokenType
