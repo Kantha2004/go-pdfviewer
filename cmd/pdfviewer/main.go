@@ -5,7 +5,6 @@ import (
 	"io"
 	"os"
 
-	"github.com/Kantha2004/go-pdfviewer/internal/model"
 	"github.com/Kantha2004/go-pdfviewer/internal/parser"
 )
 
@@ -21,22 +20,20 @@ func main() {
 
 	l := parser.NewLexer(pdfFile)
 
+	p := parser.NewParser(l)
+
 	for {
-		tok, err := l.NextToken()
+		val, err := p.Parse()
 
 		if err != nil {
-			if err == io.EOF || tok.Type == model.TokEOF {
+			if err == io.EOF {
 				break
 			}
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
 
-		if tok.Type == model.TokEOF {
-			break
-		}
-
-		fmt.Printf("Token: %v, Value: %q\n", tok.Type, tok.Value)
+		fmt.Printf("Parsed Value: %+v\n", val)
 
 	}
 

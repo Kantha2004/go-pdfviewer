@@ -9,7 +9,7 @@ const (
 	TokNumber
 	TokName
 	TokString
-	TokHexaString
+	TokHexString
 	TokArrayStart
 	TokArrayEnd
 	TokDictStart
@@ -56,7 +56,7 @@ func (t TokenType) String() string {
 		return "Name"
 	case TokString:
 		return "String"
-	case TokHexaString:
+	case TokHexString:
 		return "HexaString"
 	case TokArrayStart:
 		return "ArrayStart"

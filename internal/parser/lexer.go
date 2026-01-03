@@ -292,6 +292,6 @@ func (l *Lexer) ReadHexaString() (model.Token, error) {
 
 	}
 
-	return model.Token{Type: model.TokHexaString, Value: buff.String()}, nil
+	return model.Token{Type: model.TokHexString, Value: buff.String()}, nil
 
 }
