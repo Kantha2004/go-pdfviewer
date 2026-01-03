@@ -30,7 +30,7 @@ func TestIsWhiteSpace(t *testing.T) {
 	}
 }
 
-func TestIsPDFDigit(t *testing.T) {
+func TestIsNumberChar(t *testing.T) {
 	tests := []struct {
 		input    byte
 		expected bool
@@ -45,13 +45,13 @@ func TestIsPDFDigit(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if result := IsPDFDigit(test.input); result != test.expected {
-			t.Errorf("IsPDFDigit(%q) = %v, expected %v", test.input, result, test.expected)
+		if result := IsNumberChar(test.input); result != test.expected {
+			t.Errorf("IsNumberChar(%q) = %v, expected %v", test.input, result, test.expected)
 		}
 	}
 }
 
-func TestIsDelemiter(t *testing.T) {
+func TestIsDelimiter(t *testing.T) {
 	tests := []struct {
 		input    byte
 		expected bool
@@ -65,14 +65,14 @@ func TestIsDelemiter(t *testing.T) {
 		{'{', true},
 		{'}', true},
 		{'/', true},
-		{'%', true},
+		{'%', false},
 		{'a', false},
 		{'1', false},
 	}
 
 	for _, test := range tests {
-		if result := IsDelemiter(test.input); result != test.expected {
-			t.Errorf("IsDelemiter(%q) = %v, expected %v", test.input, result, test.expected)
+		if result := IsDelimiter(test.input); result != test.expected {
+			t.Errorf("IsDelimiter(%q) = %v, expected %v", test.input, result, test.expected)
 		}
 	}
 }

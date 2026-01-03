@@ -30,13 +30,13 @@ func IsWhiteSpace(b byte) bool {
 	}
 }
 
-// IsPDFDigit returns true if the byte is a digit or part of a number (sign or decimal).
-func IsPDFDigit(b byte) bool {
+// IsNumberChar returns true if the byte is a digit or part of a number (sign or decimal).
+func IsNumberChar(b byte) bool {
 	return unicode.IsDigit(rune(b)) || b == model.Minus || b == model.Plus || b == model.Decimal
 }
 
-// IsDelemiter returns true if the byte is a delimiter character in PDF.
-func IsDelemiter(b byte) bool {
+// IsDelimiter returns true if the byte is a delimiter character in PDF.
+func IsDelimiter(b byte) bool {
 	switch b {
 	case
 		model.OpenParen,
@@ -47,8 +47,7 @@ func IsDelemiter(b byte) bool {
 		model.CloseLBracket,
 		model.OpenBrace,
 		model.CloseBrace,
-		model.Solidus,
-		model.Percent:
+		model.Solidus:
 		return true
 	default:
 		return false
@@ -124,7 +123,7 @@ func (l *Lexer) NextToken() (model.Token, error) {
 		b2, err := l.ReadByte()
 
 		if err != nil {
-			return model.Token{}, nil
+			return model.Token{}, err
 		}
 
 		if b2 == model.LessThan {
@@ -138,7 +137,7 @@ func (l *Lexer) NextToken() (model.Token, error) {
 		b2, err := l.ReadByte()
 
 		if err != nil {
-			return model.Token{}, nil
+			return model.Token{}, err
 		}
 
 		if b2 == model.GreaterThan {
@@ -154,13 +153,13 @@ func (l *Lexer) NextToken() (model.Token, error) {
 		return l.ReadName()
 
 	default:
-		if IsDelemiter(b) {
-			return model.Token{}, fmt.Errorf("unexpected delimiter: %c", b)
-		}
-
-		if IsPDFDigit(b) {
+		if IsNumberChar(b) {
 			l.UnReadByte()
 			return l.ReadNumber()
+		}
+
+		if IsDelimiter(b) {
+			return model.Token{}, fmt.Errorf("unexpected delimiter: %c", b)
 		}
 
 		l.UnReadByte()
@@ -183,7 +182,8 @@ func (l *Lexer) ReadNumber() (model.Token, error) {
 			break
 		}
 
-		if !(IsPDFDigit(b)) {
+		if !IsNumberChar(b) {
+			l.UnReadByte()
 			break
 		}
 
@@ -203,7 +203,7 @@ func (l *Lexer) ReadName() (model.Token, error) {
 
 		b, err := l.ReadByte()
 
-		if err != nil || IsDelemiter(b) || IsWhiteSpace(b) {
+		if err != nil || IsDelimiter(b) || IsWhiteSpace(b) {
 			if err == nil {
 				l.UnReadByte()
 			}
@@ -224,7 +224,7 @@ func (l *Lexer) ReadKeyword() (model.Token, error) {
 
 		b, err := l.ReadByte()
 
-		if err != nil || IsDelemiter(b) || IsWhiteSpace(b) {
+		if err != nil || IsDelimiter(b) || IsWhiteSpace(b) {
 			if err == nil {
 				l.UnReadByte()
 			}
@@ -249,7 +249,7 @@ func (l *Lexer) ReadLiteralString() (model.Token, error) {
 		b, err := l.ReadByte()
 
 		if err != nil {
-			return model.Token{}, nil
+			return model.Token{}, err
 		}
 
 		if b == model.OpenParen {

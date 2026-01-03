@@ -28,7 +28,10 @@ const (
 	OpenBrace     byte = '{'
 	CloseBrace    byte = '}'
 	Solidus       byte = '/'
-	Percent       byte = '%'
+)
+
+const (
+	Percent byte = '%'
 )
 
 const (
