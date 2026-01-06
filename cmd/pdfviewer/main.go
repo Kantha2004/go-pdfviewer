@@ -20,35 +20,34 @@ func main() {
 
 	p := parser.NewParser(l)
 
-	// objTable := parser.NewObjectTable()
-
-	_, err = p.ParseDocument()
+	doc, err := p.ParseDocument()
 
 	if err != nil {
-		fmt.Printf("Eroor while parsing pdf file %v", err)
+		fmt.Printf("Error while parsing pdf file %v\n", err)
 		return
 	}
 
-	// fmt.
+	err = doc.ResolveCatalog()
 
-	// for {
-	// 	val, err := p.ParseObject()
+	if err != nil {
+		fmt.Printf("Error while resolving catalog: %v\n", err)
+		return
+	}
 
-	// 	if err != nil {
-	// 		if err == io.EOF {
-	// 			break
-	// 		}
-	// 		fmt.Printf("Error: %v\n", err)
-	// 		return
-	// 	}
+	err = doc.ResolvePages()
 
-	// 	objTable.Add(val)
-	// 	fmt.Printf("Parsed Value: %+v\n", val)
-	// 	ob, _ := objTable.Get(val.Number, val.Gen)
-	// 	fmt.Printf("Parsed In Object table: %+v\n", ob)
-	// }
+	if err != nil {
+		fmt.Printf("Error while resolving pages: %v\n", err)
+		return
+	}
 
-	// for objNum, gens := range objTable.Ref {
+	fmt.Println("PDF file parsed successfully!")
+
+	for i, obj := range doc.Pages {
+		fmt.Printf("Page %d: %#v\n", i, obj)
+	}
+
+	// for objNum, gens := range doc.Objects.Ref {
 	// 	for gen, obj := range gens {
 	// 		fmt.Printf("Object %d %d -> %T\n", objNum, gen, obj.Value)
 	// 	}

@@ -86,7 +86,7 @@ func TestParseDict(t *testing.T) {
 		t.Fatalf("Parse() error = %v", err)
 	}
 
-	dict, ok := val.(map[string]model.PDFValue)
+	dict, ok := val.(model.PDFDict)
 	if !ok {
 		t.Fatalf("Expected map[string]model.PDFValue, got %T", val)
 	}

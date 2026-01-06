@@ -30,3 +30,14 @@ func (o *ObjectTable) Get(objectNum int, gen int) (*model.PDFObject, bool) {
 
 	return nil, false
 }
+
+func (o *ObjectTable) GetObjectValue(objectNum int, gen int) (model.PDFValue, bool) {
+
+	obj, ok := o.Get(objectNum, gen)
+
+	if !ok {
+		return nil, false
+	}
+
+	return obj.Value, true
+}

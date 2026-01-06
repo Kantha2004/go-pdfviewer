@@ -43,6 +43,8 @@ const (
 const (
 	ObjectStart string = "obj"
 	ObjectEnd   string = "endobj"
+	StreamStart string = "stream"
+	StreamEnd   string = "endstream"
 	XRef        string = "xref"
 	Trailer     string = "trailer"
 )
