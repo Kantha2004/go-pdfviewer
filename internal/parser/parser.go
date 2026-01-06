@@ -8,8 +8,9 @@ import (
 )
 
 type Parser struct {
-	l   *Lexer
-	buf *model.Token
+	l       *Lexer
+	buf     *model.Token
+	objects *ObjectTable
 }
 
 func NewParser(l *Lexer) *Parser {
@@ -112,7 +113,7 @@ func (p *Parser) parseNumberOrRef(first model.Token) (model.PDFValue, error) {
 
 func (p *Parser) parseArray() (model.PDFValue, error) {
 
-	arr := make([]model.PDFValue, 0, 4)
+	arr := make(model.PDFArray, 0, 4)
 
 	for {
 
@@ -148,7 +149,7 @@ func (p *Parser) parseArray() (model.PDFValue, error) {
 
 func (p *Parser) parseDict() (model.PDFValue, error) {
 
-	dict := make(map[string]model.PDFValue)
+	dict := make(model.PDFDict)
 
 	for {
 		tok, err := p.next()

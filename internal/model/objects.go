@@ -14,7 +14,7 @@ type PDFString string
 
 type PDFHexString string
 
-type PDFArray []PDFArray
+type PDFArray []PDFValue
 
 type PDFDict map[string]PDFValue
 
@@ -29,6 +29,11 @@ type PDFObject struct {
 	Value  PDFValue
 }
 
+type PDFStream struct {
+	Dict PDFDict
+	Data []byte
+}
+
 type XRefEntry struct {
 	Offset     int
 	Generation int
@@ -38,6 +43,8 @@ type XRefEntry struct {
 type XRefTable map[int]XRefEntry
 
 const (
-	ObjectInUse string = "n"
-	ObjectFree  string = "f"
+	ObjectInUse string  = "n"
+	ObjectFree  string  = "f"
+	PagesType   PDFName = "Pages"
+	PageType    PDFName = "Page"
 )
