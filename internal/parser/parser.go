@@ -9,20 +9,23 @@ import (
 
 type Parser struct {
 	l       *Lexer
-	buf     *model.Token
+	buf     []model.Token
 	objects *ObjectTable
 }
 
 func NewParser(l *Lexer) *Parser {
 	return &Parser{
-		l: l,
+		l:   l,
+		buf: make([]model.Token, 0),
 	}
 }
 
 func (p *Parser) next() (model.Token, error) {
-	if p.buf != nil {
-		t := *p.buf
-		p.buf = nil
+	if len(p.buf) > 0 {
+		// Pop the last token (LIFO)
+		lastIdx := len(p.buf) - 1
+		t := p.buf[lastIdx]
+		p.buf = p.buf[:lastIdx]
 		return t, nil
 	}
 
@@ -30,7 +33,7 @@ func (p *Parser) next() (model.Token, error) {
 }
 
 func (p *Parser) unread(t model.Token) {
-	p.buf = &t
+	p.buf = append(p.buf, t)
 }
 
 func (p *Parser) Parse() (model.PDFValue, error) {
@@ -93,6 +96,7 @@ func (p *Parser) parseNumberOrRef(first model.Token) (model.PDFValue, error) {
 		return model.PDFNumber(float64(n1)), nil
 	}
 
+	// Lookahead 2
 	tok3, err := p.next()
 	if err != nil {
 		p.unread(tok2)
@@ -106,7 +110,9 @@ func (p *Parser) parseNumberOrRef(first model.Token) (model.PDFValue, error) {
 		}, nil
 	}
 
+	// Not a reference → restore in reverse order
 	p.unread(tok3)
+	p.unread(tok2)
 
 	return model.PDFNumber(float64(n1)), nil
 }

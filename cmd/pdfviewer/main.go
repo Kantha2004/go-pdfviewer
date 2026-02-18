@@ -36,6 +36,8 @@ func main() {
 
 	err = doc.ResolvePages()
 
+	err = doc.ResolvePageContents()
+
 	if err != nil {
 		fmt.Printf("Error while resolving pages: %v\n", err)
 		return
