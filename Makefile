@@ -7,9 +7,10 @@ GO_BUILD=$(GO_CMD) build
 GO_CLEAN=$(GO_CMD) clean
 GO_TEST=$(GO_CMD) test
 GO_RUN=$(GO_CMD) run
+GO_FMT=$(GO_CMD) fmt
 MAIN_PATH=cmd/pdfviewer/main.go
 
-.PHONY: all build run clean test help
+.PHONY: all build run clean test fmt help
 
 all: build
 
@@ -22,6 +23,9 @@ run:
 test:
 	$(GO_TEST) -v ./...
 
+fmt:
+	$(GO_FMT) ./...
+
 clean:
 	$(GO_CLEAN)
 	rm -rf bin/
@@ -31,5 +35,6 @@ help:
 	@echo "  build   : Build the application"
 	@echo "  run     : Run the application"
 	@echo "  test    : Run tests"
+	@echo "  fmt     : Format the code"
 	@echo "  clean   : Remove binary and build artifacts"
 	@echo "  help    : Show this help message"
