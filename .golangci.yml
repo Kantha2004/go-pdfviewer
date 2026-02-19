@@ -9,4 +9,3 @@ linters:
     - staticcheck
     - errcheck
     - unused
-    - gosimple
