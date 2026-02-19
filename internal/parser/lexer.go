@@ -85,7 +85,9 @@ func (l *Lexer) skipWhiteSpaceAndComments() error {
 		}
 
 		if !IsWhiteSpace(b) {
-			l.UnReadByte()
+			if err := l.UnReadByte(); err != nil {
+				return err
+			}
 			return nil
 		}
 
@@ -130,7 +132,9 @@ func (l *Lexer) NextToken() (model.Token, error) {
 			return model.Token{Type: model.TokDictStart, Value: "<<"}, nil
 		}
 
-		l.UnReadByte()
+		if err := l.UnReadByte(); err != nil {
+			return model.Token{}, err
+		}
 		return l.ReadHexaString()
 
 	case model.GreaterThan:
@@ -154,7 +158,9 @@ func (l *Lexer) NextToken() (model.Token, error) {
 
 	default:
 		if IsNumberChar(b) {
-			l.UnReadByte()
+			if err := l.UnReadByte(); err != nil {
+				return model.Token{}, err
+			}
 			return l.ReadNumber()
 		}
 
@@ -162,7 +168,9 @@ func (l *Lexer) NextToken() (model.Token, error) {
 			return model.Token{}, fmt.Errorf("unexpected delimiter: %c", b)
 		}
 
-		l.UnReadByte()
+		if err := l.UnReadByte(); err != nil {
+			return model.Token{}, err
+		}
 		return l.ReadKeyword()
 
 	}
@@ -183,7 +191,9 @@ func (l *Lexer) ReadNumber() (model.Token, error) {
 		}
 
 		if !IsNumberChar(b) {
-			l.UnReadByte()
+			if err := l.UnReadByte(); err != nil {
+				return model.Token{}, err
+			}
 			break
 		}
 
@@ -205,7 +215,9 @@ func (l *Lexer) ReadName() (model.Token, error) {
 
 		if err != nil || IsDelimiter(b) || IsWhiteSpace(b) {
 			if err == nil {
-				l.UnReadByte()
+				if err := l.UnReadByte(); err != nil {
+					return model.Token{}, err
+				}
 			}
 			break
 		}
@@ -226,7 +238,9 @@ func (l *Lexer) ReadKeyword() (model.Token, error) {
 
 		if err != nil || IsDelimiter(b) || IsWhiteSpace(b) {
 			if err == nil {
-				l.UnReadByte()
+				if err := l.UnReadByte(); err != nil {
+					return model.Token{}, err
+				}
 			}
 			break
 		}
