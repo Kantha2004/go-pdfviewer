@@ -17,7 +17,7 @@ func (p *Parser) ParseXRef() (*model.XRefTable, error) {
 	}
 
 	if tok.Type != model.TokKeyword || tok.Value != model.XRef {
-		return nil, fmt.Errorf("Not a valid xref")
+		return nil, fmt.Errorf("not a valid xref")
 	}
 
 	for {
