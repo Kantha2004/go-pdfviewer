@@ -12,6 +12,9 @@ type Page struct {
 	ObjectNumber int
 	Generation   int
 
+	Parent model.PDFIndirectRef
+	Dict   model.PDFDict
+
 	// Structural properties (resolved)
 	MediaBox  [4]float64
 	Resources model.PDFDict
@@ -151,9 +154,15 @@ func (doc *Document) ResolvePageContents() error {
 		}
 
 		pageObj := Page{
+			Dict:         pageDict,
 			ObjectNumber: page.Number,
 			Generation:   page.Gen,
 			Streams:      make([]model.PDFStream, 0),
+		}
+
+		parentRef, ok := pageDict["Parent"].(model.PDFIndirectRef)
+		if ok {
+			pageObj.Parent = parentRef
 		}
 
 		switch contents := contents.(type) {
@@ -187,12 +196,12 @@ func (doc *Document) ResolvePageContents() error {
 		}
 
 		// MediaBox
-		if err := doc.addMediaBoxToPage(pageDict, &pageObj); err != nil {
+		if err := doc.addMediaBoxToPage(&pageObj); err != nil {
 			return err
 		}
 
 		// Resources
-		if err := doc.addResourcesBoxToPage(pageDict, &pageObj); err != nil {
+		if err := doc.addResourcesBoxToPage(&pageObj); err != nil {
 			return err
 		}
 
@@ -203,9 +212,15 @@ func (doc *Document) ResolvePageContents() error {
 	return nil
 }
 
-func (doc *Document) addMediaBoxToPage(pageDict model.PDFDict, page *Page) error {
+func (doc *Document) addMediaBoxToPage(page *Page) error {
 
-	mediaBox, ok := pageDict["MediaBox"].(model.PDFArray)
+	mediabox, err := doc.resolveInheritance(page, "MediaBox")
+
+	if err != nil {
+		return err
+	}
+
+	mediaBox, ok := mediabox.(model.PDFArray)
 
 	if !ok {
 		return fmt.Errorf("media Box should of type array but got %t", mediaBox)
@@ -235,17 +250,20 @@ func (doc *Document) addMediaBoxToPage(pageDict model.PDFDict, page *Page) error
 
 }
 
-func (doc *Document) addResourcesBoxToPage(pageDict model.PDFDict, page *Page) error {
+func (doc *Document) addResourcesBoxToPage(page *Page) error {
 
-	resources, ok := pageDict["Resources"].(model.PDFDict)
+	resource, err := doc.resolveInheritance(page, "Resources")
 
-	if resources != nil {
-		if !ok {
-			return fmt.Errorf("resources Box should of type dict but got %t", pageDict["Resources"])
-		}
-
-		page.Resources = resources
+	if err != nil {
+		return err
 	}
+
+	resources, ok := resource.(model.PDFDict)
+	if !ok {
+		return fmt.Errorf("resources should be dictionary but got %T", resource)
+	}
+
+	page.Resources = resources
 
 	return nil
 
@@ -267,6 +285,46 @@ func (doc *Document) addStreamToPage(content model.PDFIndirectRef, page *Page) e
 	page.Streams = append(page.Streams, stream)
 
 	return nil
+}
+
+func (doc *Document) resolveInheritance(page *Page, key string) (any, error) {
+
+	currentDict := page.Dict
+	currentParent := page.Parent
+
+	for {
+
+		if value, ok := currentDict[key]; ok {
+			return value, nil
+		}
+
+		if currentParent.ObjectNumber == 0 {
+			break
+		}
+
+		parentObj, ok := doc.Objects.GetObjectValue(currentParent.ObjectNumber, currentParent.Generation)
+		if !ok {
+			return nil, fmt.Errorf("parent object %d %d not found",
+				currentParent.ObjectNumber, currentParent.Generation)
+		}
+
+		parentDict, ok := parentObj.(model.PDFDict)
+
+		if !ok {
+			return nil, fmt.Errorf("the parent object %d %d is not a dictionary", currentParent.ObjectNumber, currentParent.Generation)
+		}
+
+		currentDict = parentDict
+
+		if parentRef, ok := parentDict["Parent"].(model.PDFIndirectRef); ok {
+			currentParent = parentRef
+		} else {
+			currentParent = model.PDFIndirectRef{}
+		}
+
+	}
+
+	return nil, fmt.Errorf("property %s not found in inheritance chain", key)
 }
 
 func (p *Parser) ParseDocument() (*Document, error) {
