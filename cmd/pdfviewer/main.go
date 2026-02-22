@@ -45,6 +45,13 @@ func main() {
 		return
 	}
 
+	err = doc.ResolvePageContents()
+
+	if err != nil {
+		fmt.Printf("Error while resolving page contents: %v\n", err)
+		return
+	}
+
 	fmt.Println("PDF file parsed successfully!")
 
 	for i, obj := range doc.Pages {

@@ -1,0 +1,4 @@
+# CurrentTodo: 
+
+Implement resolveInherited() 
+because the page might not have the MediaBox or Resources the Parent can have them
