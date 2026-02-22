@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/Kantha2004/go-pdfviewer/internal/model"
+	"github.com/Kantha2004/go-pdfviewer/internal/util"
 )
 
 func TestIsWhiteSpace(t *testing.T) {
@@ -24,7 +25,7 @@ func TestIsWhiteSpace(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if result := IsWhiteSpace(test.input); result != test.expected {
+		if result := util.IsWhiteSpace(test.input); result != test.expected {
 			t.Errorf("IsWhiteSpace(%q) = %v, expected %v", test.input, result, test.expected)
 		}
 	}
@@ -45,8 +46,8 @@ func TestIsNumberChar(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if result := IsNumberChar(test.input); result != test.expected {
-			t.Errorf("IsNumberChar(%q) = %v, expected %v", test.input, result, test.expected)
+		if result := util.IsNumberChar(test.input); result != test.expected {
+			t.Errorf("util.IsNumberChar(%q) = %v, expected %v", test.input, result, test.expected)
 		}
 	}
 }
@@ -71,7 +72,7 @@ func TestIsDelimiter(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if result := IsDelimiter(test.input); result != test.expected {
+		if result := util.IsDelimiter(test.input); result != test.expected {
 			t.Errorf("IsDelimiter(%q) = %v, expected %v", test.input, result, test.expected)
 		}
 	}

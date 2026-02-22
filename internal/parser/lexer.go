@@ -5,9 +5,9 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"unicode"
 
 	"github.com/Kantha2004/go-pdfviewer/internal/model"
+	"github.com/Kantha2004/go-pdfviewer/internal/util"
 )
 
 // Lexer parses a PDF input stream into tokens.
@@ -18,40 +18,6 @@ type Lexer struct {
 // NewLexer creates a new Lexer reading from the provided io.Reader.
 func NewLexer(rd io.Reader) *Lexer {
 	return &Lexer{r: bufio.NewReader(rd)}
-}
-
-// IsWhiteSpace returns true if the byte is considered a whitespace character in PDF.
-func IsWhiteSpace(b byte) bool {
-	switch b {
-	case 0x00, 0x09, 0x0A, 0x0C, 0x0D, 0x20:
-		return true
-	default:
-		return false
-	}
-}
-
-// IsNumberChar returns true if the byte is a digit or part of a number (sign or decimal).
-func IsNumberChar(b byte) bool {
-	return unicode.IsDigit(rune(b)) || b == model.Minus || b == model.Plus || b == model.Decimal
-}
-
-// IsDelimiter returns true if the byte is a delimiter character in PDF.
-func IsDelimiter(b byte) bool {
-	switch b {
-	case
-		model.OpenParen,
-		model.CloseParen,
-		model.LessThan,
-		model.GreaterThan,
-		model.OpenLBracket,
-		model.CloseLBracket,
-		model.OpenBrace,
-		model.CloseBrace,
-		model.Solidus:
-		return true
-	default:
-		return false
-	}
 }
 
 // ReadByte reads the next byte from the input source.
@@ -84,7 +50,7 @@ func (l *Lexer) skipWhiteSpaceAndComments() error {
 			continue
 		}
 
-		if !IsWhiteSpace(b) {
+		if !util.IsWhiteSpace(b) {
 			if err := l.UnReadByte(); err != nil {
 				return err
 			}
@@ -157,14 +123,14 @@ func (l *Lexer) NextToken() (model.Token, error) {
 		return l.ReadName()
 
 	default:
-		if IsNumberChar(b) {
+		if util.IsNumberChar(b) {
 			if err := l.UnReadByte(); err != nil {
 				return model.Token{}, err
 			}
 			return l.ReadNumber()
 		}
 
-		if IsDelimiter(b) {
+		if util.IsDelimiter(b) {
 			return model.Token{}, fmt.Errorf("unexpected delimiter: %c", b)
 		}
 
@@ -190,7 +156,7 @@ func (l *Lexer) ReadNumber() (model.Token, error) {
 			break
 		}
 
-		if !IsNumberChar(b) {
+		if !util.IsNumberChar(b) {
 			if err := l.UnReadByte(); err != nil {
 				return model.Token{}, err
 			}
@@ -213,7 +179,7 @@ func (l *Lexer) ReadName() (model.Token, error) {
 
 		b, err := l.ReadByte()
 
-		if err != nil || IsDelimiter(b) || IsWhiteSpace(b) {
+		if err != nil || util.IsDelimiter(b) || util.IsWhiteSpace(b) {
 			if err == nil {
 				if err := l.UnReadByte(); err != nil {
 					return model.Token{}, err
@@ -236,7 +202,7 @@ func (l *Lexer) ReadKeyword() (model.Token, error) {
 
 		b, err := l.ReadByte()
 
-		if err != nil || IsDelimiter(b) || IsWhiteSpace(b) {
+		if err != nil || util.IsDelimiter(b) || util.IsWhiteSpace(b) {
 			if err == nil {
 				if err := l.UnReadByte(); err != nil {
 					return model.Token{}, err
@@ -300,7 +266,7 @@ func (l *Lexer) ReadHexaString() (model.Token, error) {
 			break
 		}
 
-		if !IsWhiteSpace(b) {
+		if !util.IsWhiteSpace(b) {
 			buff.WriteByte(b)
 		}
 
