@@ -54,8 +54,9 @@ func main() {
 
 	fmt.Println("PDF file parsed successfully!")
 
-	for i, obj := range doc.Pages {
+	for i, obj := range doc.ResolvedPages {
 		fmt.Printf("Page %d: %#v\n", i, obj)
+		fmt.Printf("Stream: %v\n", obj.Streams)
 	}
 
 	// for objNum, gens := range doc.Objects.Ref {
