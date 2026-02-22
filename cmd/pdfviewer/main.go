@@ -14,7 +14,11 @@ func main() {
 		fmt.Printf("Error opening pdf file %q", err)
 		return
 	}
-	defer pdfFile.Close()
+	defer func() {
+		if err := pdfFile.Close(); err != nil {
+			fmt.Printf("Error closing file: %v\n", err)
+		}
+	}()
 
 	l := parser.NewLexer(pdfFile)
 
