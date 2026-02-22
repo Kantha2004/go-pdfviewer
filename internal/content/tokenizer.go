@@ -172,7 +172,7 @@ func (t *CSTokernizer) readLiteralString() (model.PDFString, error) {
 				// Consume optional '\n'
 				peek, err := t.peekByte()
 				if err == nil && peek == '\n' {
-					t.reader.ReadByte()
+					_, _ = t.reader.ReadByte()
 				}
 				// Do not write anything (line continuation removed)
 
@@ -190,7 +190,7 @@ func (t *CSTokernizer) readLiteralString() (model.PDFString, error) {
 						break
 					}
 					if peek >= '0' && peek <= '7' {
-						t.reader.ReadByte()
+						_, _ = t.reader.ReadByte()
 						octalDigits = append(octalDigits, peek)
 					} else {
 						break
