@@ -142,7 +142,7 @@ func (doc *Document) ResolvePageContents() error {
 	for _, page := range doc.Pages {
 		pageDict, ok := page.Value.(model.PDFDict)
 
-		if ok != true {
+		if !ok {
 			return fmt.Errorf("page value is not a dict %v", page.Value)
 		}
 

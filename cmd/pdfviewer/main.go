@@ -40,10 +40,15 @@ func main() {
 
 	err = doc.ResolvePages()
 
+	if err != nil {
+		fmt.Printf("Error while resolving pages: %v\n", err)
+		return
+	}
+
 	err = doc.ResolvePageContents()
 
 	if err != nil {
-		fmt.Printf("Error while resolving pages: %v\n", err)
+		fmt.Printf("Error while resolving page contents: %v\n", err)
 		return
 	}
 
